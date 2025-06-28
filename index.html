@@ -22,12 +22,14 @@
             align-items: center;
             padding: 20px;
             overflow-x: hidden;
+            position: relative;
         }
         
         .container {
             max-width: 1200px;
             width: 100%;
             text-align: center;
+            z-index: 10;
         }
         
         header {
@@ -438,6 +440,66 @@
             border-radius: 50%;
         }
         
+        .easter-egg-modal {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+        }
+        
+        .easter-egg-modal .modal-title {
+            color: #ffd700;
+            font-size: 2.5rem;
+            text-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+        
+        .secret-message {
+            font-size: 1.4rem;
+            text-align: center;
+            margin: 20px 0;
+            line-height: 1.8;
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .easter-egg-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .easter-egg-image {
+            width: 150px;
+            height: 150px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            animation: pulse 2s infinite;
+        }
+        
+        .hint {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.2);
+            color: rgba(255,255,255,0.7);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            animation: hintPulse 5s infinite;
+            z-index: 5;
+        }
+        
+        @keyframes hintPulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
@@ -572,6 +634,12 @@
                 padding: 10px 20px;
                 font-size: 0.95rem;
             }
+            
+            .hint {
+                font-size: 0.8rem;
+                width: 90%;
+                text-align: center;
+            }
         }
         
         @media (max-width: 480px) {
@@ -607,12 +675,23 @@
             .modal-title {
                 font-size: 1.5rem;
             }
+            
+            .easter-egg-modal .modal-title {
+                font-size: 2rem;
+            }
+            
+            .secret-message {
+                font-size: 1.1rem;
+            }
         }
     </style>
 </head>
 <body>
     <!-- Floating hearts background -->
     <div class="hearts" id="hearts"></div>
+    
+    <!-- Easter Egg Hint -->
+    <div class="hint" id="hint">Psst... Try typing "LOVE" anywhere for a surprise!</div>
     
     <!-- Home Page -->
     <div class="container" id="home-page">
@@ -688,7 +767,7 @@
                 </p>
             </div>
             <button class="btn" onclick="createConfetti()">
-                <i class="fas fa-heart"></i> <a href="https://www.youtube.com/watch?v=2Vv-BfVoq4g" style="text-decoration: none; color: white;">Play this song for you</a>
+                <i class="fas fa-heart"></i> Play This Song For You
             </button>
         </div>
     </div>
@@ -700,7 +779,7 @@
             <div class="note-content">
                 <p>My Dearest Love,</p>
                 <p>On your special day, I want you to know how incredibly grateful I am to have you in my life. Your presence has brought so much joy, laughter, and meaning to my world.</p>
-                <p>I cherish every moment we've shared,Be it a fight(not so much mb) or be it our loving moments. You make every day brighter just by being you.I have learnt so much from you and that includes being a decent human.</p>
+                <p>I cherish every moment we've shared - from our deep conversations to our comfortable silences, from our adventures to our quiet nights in. You make every day brighter just by being you.</p>
                 <p>Thank you for your kindness, your understanding, and your beautiful heart. I feel so lucky to be loved by you and to have the privilege of loving you in return.</p>
                 <p>May this year bring you all the happiness you deserve, and may we continue to build beautiful memories together.</p>
                 <p>With all my love,</p>
@@ -761,6 +840,36 @@
             <button class="btn" id="new-compliment">
                 <i class="fas fa-gift"></i> Get Another Compliment
             </button>
+        </div>
+    </div>
+    
+    <!-- Easter Egg Modal -->
+    <div class="modal" id="easter-egg-modal">
+        <div class="modal-content easter-egg-modal">
+            <span class="close-modal" data-modal="easter-egg-modal">&times;</span>
+            <h2 class="modal-title">💖 Secret Surprise! 💖</h2>
+            
+            <div class="easter-egg-content">
+                <div class="easter-egg-image">
+                    <i class="fas fa-heart"></i>
+                </div>
+                
+                <div class="secret-message">
+                    You found the secret! I wanted to tell you one more time...<br><br>
+                    I love you more than words can express. You mean the world to me, and I cherish every moment we share together.
+                </div>
+                
+                <div class="secret-message">
+                    Here's a special promise just for you:<br>
+                    <i class="fas fa-star"></i> I'll always be here for you<br>
+                    <i class="fas fa-star"></i> I'll support your dreams<br>
+                    <i class="fas fa-star"></i> I'll cherish our love forever
+                </div>
+                
+                <button class="btn" style="background: linear-gradient(to right, #ffd700, #ff6b6b);" onclick="createConfetti()">
+                    <i class="fas fa-lock-open"></i> Unlock More Love
+                </button>
+            </div>
         </div>
     </div>
     
@@ -829,9 +938,49 @@
             createConfetti();
         }
         
+        // Easter egg functionality
+        let typedString = '';
+        const secretCode = 'love';
+        
+        function checkEasterEgg(e) {
+            // Ignore modifier keys and non-character keys
+            if (e.ctrlKey || e.altKey || e.metaKey || e.key.length > 1) return;
+            
+            typedString += e.key.toLowerCase();
+            
+            // Keep only the last N characters (length of secret code)
+            if (typedString.length > secretCode.length) {
+                typedString = typedString.substring(typedString.length - secretCode.length);
+            }
+            
+            // Check if the typed string matches the secret code
+            if (typedString === secretCode) {
+                // Reset the typed string
+                typedString = '';
+                
+                // Hide the hint
+                document.getElementById('hint').style.display = 'none';
+                
+                // Show the easter egg modal
+                document.getElementById('easter-egg-modal').style.display = 'flex';
+                createConfetti();
+                
+                // Hide the hint permanently
+                localStorage.setItem('easterEggFound', 'true');
+            }
+        }
+        
         // DOM Content Loaded
         document.addEventListener('DOMContentLoaded', function() {
             createHearts();
+            
+            // Hide hint if easter egg already found
+            if (localStorage.getItem('easterEggFound')) {
+                document.getElementById('hint').style.display = 'none';
+            }
+            
+            // Add keydown event listener for easter egg
+            document.addEventListener('keydown', checkEasterEgg);
             
             // Gift box click event
             const giftContainer = document.getElementById('gift-container');
